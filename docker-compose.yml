@@ -1,0 +1,130 @@
+version: "3.9"
+name: "minicomi"
+
+# Minicomi
+x-env-mc-version: &env-mc-version ${MINICOMI_VERSION:-v0.0}
+
+# Database
+x-env-db-name: &env-db-name ${DB_HOST:-minicomi}
+x-env-db-user: &env-db-user ${DB_USER:-minicomiadmin}
+x-env-db-password: &env-db-password ${DB_PASSWORD:-G1g@c0m1}
+x-env-db-host: &env-db-host ${DB_HOST:-postgresql}
+x-env-db-port: &env-db-port ${DB_PORT:-5432}
+x-env-admin-email: &env-admin-email ${ADMIN_EMAIL:-nguyenjohnson65@gmail.com}
+x-env-admin-password: &env-admin-password ${ADMIN_PASSWORD:-bnb@KTB6hrjfpwyud}
+
+# Django
+x-env-django-port: &env-django-port ${DJANGO_PORT:-8000}
+x-env-django-host: &env-django-host ${DJANGO_HOST:-backend}
+# <'local'|'development'|'staging'|'production'>
+x-env-environment: &env-environment ${ENVIRONMENT:-local}
+x-env-domain: &env-domain ${DOMAIN:-}
+
+# Vite
+x-env-vite-http: &env-vite-http ${VITE_HTTP:-}
+x-env-vite-host: &env-vite-host ${VITE_HOST:-127.0.0.1}
+x-env-vite-port: &env-vite-port ${VITE_PORT:-5173}
+x-env-django-vite-prod-mode: &env-django-vite-prod-mode ${DJANGO_VITE_PROD_MODE:-}
+
+# Shared backend environment settings
+x-backend-environment: &backend-environment
+  ENVIRONMENT: *env-environment
+  DOMAIN: *env-domain
+  DB_NAME: *env-db-name
+  DB_USER: *env-db-user
+  DB_PASSWORD: *env-db-password
+  DB_HOST: *env-db-host
+  DB_PORT: *env-db-port
+  DJANGO_PORT: *env-django-port
+  DJANGO_HOST: *env-django-host
+  PYTHONUNBUFFERED: 1
+  MC_VERSION: *env-mc-version
+
+# Backend settings common to: Django
+# x-backend-base: &backend-base
+#   depends_on:
+#     - mysql
+#     - memcached
+#   image: gf-backend
+#   user: ${DOCKER_USER:-0:0}
+#   build:
+#     context: ./backend
+#     dockerfile: Dockerfile${ARCH_OVERRIDE:-}
+#   restart: always
+#   environment: *backend-environment
+#   stdin_open: true
+#   volumes:
+#   - ./backend:/backend
+#   - ./logs:/logs
+
+services:
+  database:
+    hostname: mc-database
+    container_name: mc-database
+    image: postgres
+    restart: always
+    volumes:
+      - database:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: *env-db-user
+      POSTGRES_DB: *env-db-name
+      POSTGRES_PASSWORD: *env-db-password
+      ALLOW_EMPTY_PASSWORD: yes
+    ports:
+      - "5432:5432"
+  database-admin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    profiles:
+      - monitor
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - database
+    environment:
+      PGADMIN_DEFAULT_EMAIL: *env-admin-email
+      PGADMIN_DEFAULT_PASSWORD: *env-admin-password
+    ports:
+      - "8080:80"
+
+  frontend:
+    hostname: mc-frontend
+    container_name: mc-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "5173:5173"
+    networks:
+      - vue-network
+    environment:
+      VITE_HTTP: *env-vite-http
+      VITE_HOST: *env-vite-host
+      VITE_PORT: *env-vite-port
+    volumes:
+      - ".:/frontend"
+      - "/frontend/node_modules"
+
+  # backend:
+  #   <<: *backend-base
+  #   environment:
+  #     <<: *backend-environment
+  #     VITE_HTTP: *env-vite-http
+  #     VITE_HOST: *env-vite-host
+  #     VITE_PORT: *env-vite-port
+  #     DJANGO_VITE_PROD_MODE: *env-django-vite-prod-mode
+  #   ports:
+  #     - mode: ingress
+  #       target: 8000
+  #       published: *env-django-port
+  #       protocol: tcp
+
+volumes:
+  database:
+  pgadmin-data:
+
+networks:
+  vue-network:
+    driver: bridge
