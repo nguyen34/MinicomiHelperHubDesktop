@@ -87,7 +87,6 @@ services:
       PGADMIN_DEFAULT_PASSWORD: *env-admin-password
     ports:
       - "8080:80"
-
   frontend:
     hostname: mc-frontend
     container_name: mc-frontend
@@ -104,8 +103,8 @@ services:
       VITE_HOST: *env-vite-host
       VITE_PORT: *env-vite-port
     volumes:
-      - ".:/frontend"
-      - "/frontend/node_modules"
+      - ./frontend/:/frontend/
+      - /frontend/node_modules
 
   # backend:
   #   <<: *backend-base
