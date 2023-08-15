@@ -58,7 +58,7 @@ services:
     ports:
       - "5432:5432"
   database-admin:
-    container_name: pgadmin
+    container_name: mc-pgadmin
     image: dpage/pgadmin4
     restart: always
     profiles:
