@@ -8,7 +8,7 @@ x-env-mc-version: &env-mc-version ${MINICOMI_VERSION:-v0.0}
 x-env-db-name: &env-db-name ${DB_HOST:-minicomi}
 x-env-db-user: &env-db-user ${DB_USER:-minicomiadmin}
 x-env-db-password: &env-db-password ${DB_PASSWORD:-G1g@c0m1}
-x-env-db-host: &env-db-host ${DB_HOST:-postgresql}
+x-env-db-host: &env-db-host ${DB_HOST:-mc-database}
 x-env-db-port: &env-db-port ${DB_PORT:-5432}
 x-env-admin-email: &env-admin-email ${ADMIN_EMAIL:-nguyenjohnson65@gmail.com}
 x-env-admin-password: &env-admin-password ${ADMIN_PASSWORD:-bnb@KTB6hrjfpwyud}
@@ -40,23 +40,6 @@ x-backend-environment: &backend-environment
   PYTHONUNBUFFERED: 1
   MC_VERSION: *env-mc-version
 
-# Backend settings common to: Django
-# x-backend-base: &backend-base
-#   depends_on:
-#     - mysql
-#     - memcached
-#   image: gf-backend
-#   user: ${DOCKER_USER:-0:0}
-#   build:
-#     context: ./backend
-#     dockerfile: Dockerfile${ARCH_OVERRIDE:-}
-#   restart: always
-#   environment: *backend-environment
-#   stdin_open: true
-#   volumes:
-#   - ./backend:/backend
-#   - ./logs:/logs
-
 services:
   database:
     hostname: mc-database
@@ -70,6 +53,8 @@ services:
       POSTGRES_DB: *env-db-name
       POSTGRES_PASSWORD: *env-db-password
       ALLOW_EMPTY_PASSWORD: yes
+    networks:
+      - vue-network
     ports:
       - "5432:5432"
   database-admin:
@@ -85,6 +70,8 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: *env-admin-email
       PGADMIN_DEFAULT_PASSWORD: *env-admin-password
+    networks:
+      - vue-network
     ports:
       - "8080:80"
   frontend:
@@ -105,20 +92,25 @@ services:
     volumes:
       - ./frontend/:/frontend/
       - /frontend/node_modules
-
-  # backend:
-  #   <<: *backend-base
-  #   environment:
-  #     <<: *backend-environment
-  #     VITE_HTTP: *env-vite-http
-  #     VITE_HOST: *env-vite-host
-  #     VITE_PORT: *env-vite-port
-  #     DJANGO_VITE_PROD_MODE: *env-django-vite-prod-mode
-  #   ports:
-  #     - mode: ingress
-  #       target: 8000
-  #       published: *env-django-port
-  #       protocol: tcp
+  backend:
+    hostname: mc-backend
+    container_name: mc-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      - database
+    links:
+      - database
+    restart: always
+    ports:
+      - "8000:8000"
+    networks:
+      - vue-network
+    environment: *backend-environment
+    volumes:
+      - ./backend/:/backend/
+      - /backend/node_modules
 
 volumes:
   database:
