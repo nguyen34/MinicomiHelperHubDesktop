@@ -1,5 +1,6 @@
 Django==4.2.4
 django-cors-headers==4.2.0
 djangorestframework==3.14.0
+ipython==8.14.0
 python-dotenv==1.0.0
 psycopg2==2.9.7
