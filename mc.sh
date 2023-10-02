@@ -79,6 +79,9 @@ fn_backend() {
         makemigrations)
             pipenv run python manage.py makemigrations
             ;;
+        test)
+            pipenv run python manage.py test
+            ;;
         *)
             echo "Unknown command"
             ;;
