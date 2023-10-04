@@ -1,11 +1,11 @@
 import { createStore } from 'vuex';
-import test from '@/store/modules/test';
+import example from '@/store/modules/example';
 
 
 
 const store = createStore({
     modules: {
-        test
+        example
     }
 });
 

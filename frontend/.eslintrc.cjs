@@ -9,11 +9,20 @@ module.exports = {
     '@vue/eslint-config-typescript',
     '@vue/eslint-config-prettier/skip-formatting'
   ],
+  env: {
+    node: true,
+    jest: true,
+  },
   overrides: [
     {
       files: [
-        'cypress/e2e/**/*.{cy,spec}.{js,ts,jsx,tsx}'
+        'cypress/e2e/**/*.{cy,spec}.{js,ts,jsx,tsx}',
+        "**/*.test.js",
+        "**/*.test.jsx"
       ],
+      "env": {
+        "jest": true,
+      },
       'extends': [
         'plugin:cypress/recommended'
       ]
