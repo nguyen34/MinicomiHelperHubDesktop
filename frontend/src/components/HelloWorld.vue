@@ -1,5 +1,5 @@
 <!-- HelloWorld.vue -->
 
 <template>
-  <p>Hello there!</p>
+	<p>Hello there!</p>
 </template>
